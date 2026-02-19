@@ -33,7 +33,7 @@ export const documentChunks = pgTable('document_chunks', {
     id: serial('id').primaryKey(),
     documentName: text('document_name').notNull(),
     content: text('content').notNull(),
-    embedding: vector('embedding', { dimensions: 768 }), // Gemini text-embedding-004
+    embedding: vector('embedding', { dimensions: 3072 }), // Gemini models/gemini-embedding-001
     metadata: jsonb('metadata'),
     userId: integer('user_id').references(() => users.id).notNull(), 
 });

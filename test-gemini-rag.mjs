@@ -24,13 +24,14 @@ async function testGeminiRag() {
         // Actually the SDK doesn't expose listModels easily on the instance in 0.24.1?
         // Let's try to use "text-embedding-004" WITHOUT the "models/" prefix again but clarify API key usage.
         
-        const model = genAI.getGenerativeModel({ model: "embedding-001" });
+        // Previous list-all-models.mjs output showed: models/gemini-embedding-001
+        const model = genAI.getGenerativeModel({ model: "models/gemini-embedding-001" });
         const result = await model.embedContent("Hello Gemini");
         const vector = result.embedding.values;
         
         console.log(`Generated vector length: ${vector.length}`);
-        if (vector.length !== 768) {
-             throw new Error(`Expected 768 dimensions, got ${vector.length}`);
+        if (vector.length !== 3072) {
+             throw new Error(`Expected 3072 dimensions, got ${vector.length}`);
         }
 
         // 2. Insert

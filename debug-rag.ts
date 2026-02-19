@@ -53,10 +53,10 @@ async function debugRag() {
                     
                     if (Array.isArray(embedding)) {
                         console.log(`      First Chunk Embedding Dim: ${embedding.length}`);
-                        if (embedding.length === 768) {
-                           console.log("      ✅ Dimension matches schema (768)");
+                        if (embedding.length === 3072) {
+                           console.log("      ✅ Dimension matches schema (3072)");
                         } else {
-                           console.log("      ❌ Dimension Mismatch! Expected 768");
+                           console.log("      ❌ Dimension Mismatch! Expected 3072");
                         }
                     } else if (typeof embedding === 'string') {
                          try {

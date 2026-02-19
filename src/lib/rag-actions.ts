@@ -50,7 +50,7 @@ import { parsePdfBuffer } from "./pdf-utils";
 
 async function generateEmbedding(text: string): Promise<number[] | null> {
     try {
-        const model = genAI.getGenerativeModel({ model: "models/embedding-001" });
+        const model = genAI.getGenerativeModel({ model: "models/gemini-embedding-001" });
         const result = await model.embedContent(text);
         const embedding = result.embedding;
         return embedding.values;

@@ -19,10 +19,10 @@ async function migrate() {
         console.log("Truncating existing chunks to avoid dimension mismatch errors...");
         await sql`TRUNCATE TABLE document_chunks;`;
         
-        console.log("Altering embedding column to vector(768)...");
+        console.log("Altering embedding column to vector(3072)...");
         // We drop and re-add to be safe and clean
         await sql`ALTER TABLE document_chunks DROP COLUMN IF EXISTS embedding;`;
-        await sql`ALTER TABLE document_chunks ADD COLUMN embedding vector(768);`;
+        await sql`ALTER TABLE document_chunks ADD COLUMN embedding vector(3072);`;
         
         console.log("✅ Database schema updated for Gemini.");
 
