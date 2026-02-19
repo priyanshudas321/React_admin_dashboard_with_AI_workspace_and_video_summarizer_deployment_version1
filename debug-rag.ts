@@ -1,14 +1,27 @@
-
 import { db } from "./src/db/index";
 import { documents, documentChunks, workspaces } from "./src/db/schema";
 import { eq, sql } from "drizzle-orm";
-import { pipeline } from "@xenova/transformers";
 import * as dotenv from "dotenv";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 dotenv.config({ path: ".env.local" });
 
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+
+async function generateEmbedding(text: string): Promise<number[] | null> {
+    try {
+        const model = genAI.getGenerativeModel({ model: "models/embedding-001" });
+        const result = await model.embedContent(text);
+        const embedding = result.embedding;
+        return embedding.values;
+    } catch (error) {
+        console.error("Gemini Embedding Error:", error);
+        throw error;
+    }
+}
+
 async function debugRag() {
-    console.log("--- Starting RAG Debug ---");
+    console.log("Starting RAG Debug (Gemini)...");
 
     try {
         // 1. Check Workspaces
@@ -40,6 +53,11 @@ async function debugRag() {
                     
                     if (Array.isArray(embedding)) {
                         console.log(`      First Chunk Embedding Dim: ${embedding.length}`);
+                        if (embedding.length === 768) {
+                           console.log("      ✅ Dimension matches schema (768)");
+                        } else {
+                           console.log("      ❌ Dimension Mismatch! Expected 768");
+                        }
                     } else if (typeof embedding === 'string') {
                          try {
                             const parsed = JSON.parse(embedding);

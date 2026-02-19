@@ -33,7 +33,7 @@ async function testInsertion() {
         // 3. Try inserting chunk WITH stringify
         try {
             console.log("Attempt 1: Stringified Vector");
-            const vector = Array(384).fill(0.1);
+            const vector = Array(768).fill(0.1);
             await db.insert(documentChunks).values({
                 documentName: doc.name,
                 content: "chunk1",
@@ -49,7 +49,7 @@ async function testInsertion() {
         // 3. Try inserting chunk WITHOUT stringify (Array)
         try {
             console.log("Attempt 2: Raw Array Vector");
-            const vector = Array(384).fill(0.2);
+            const vector = Array(768).fill(0.2);
             await db.insert(documentChunks).values({
                 documentName: doc.name,
                 content: "chunk2",

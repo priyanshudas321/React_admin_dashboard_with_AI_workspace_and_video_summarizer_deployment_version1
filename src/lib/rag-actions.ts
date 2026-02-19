@@ -43,35 +43,19 @@ function chunkText(text: string, chunkSize: number = 1000, overlap: number = 200
  
 // getWorkspace and getWorkspaceDocuments moved to workspace-actions.ts
 
-// Singleton for pipeline
-// Singleton for pipeline
-let embeddingPipeline: any = null;
+// 1. Remove Xenova import
+// import { pipeline } from "@xenova/transformers"; -> Removed
 
 import { parsePdfBuffer } from "./pdf-utils";
 
-// ... (previous code)
-
-async function getPipeline() {
-    if (!embeddingPipeline) {
-        const { pipeline } = await import("@xenova/transformers");
-        
-        // Settings for Vercel/Serverless
-        // @xenova/transformers works well with defaults, but we can ensure it uses the correct quantized model
-        
-        // Use a model that has 384 dimensions to match DB schema
-        embeddingPipeline = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
-    }
-
-    return embeddingPipeline;
-}
-
 async function generateEmbedding(text: string): Promise<number[] | null> {
     try {
-        const pipe = await getPipeline();
-        const output = await pipe(text, { pooling: 'mean', normalize: true });
-        return Array.from(output.data);
+        const model = genAI.getGenerativeModel({ model: "models/embedding-001" });
+        const result = await model.embedContent(text);
+        const embedding = result.embedding;
+        return embedding.values;
     } catch (error) {
-        console.error("Embedding generation error:", error);
+        console.error("Gemini Embedding Error:", error);
         throw error;
     }
 }
