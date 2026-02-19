@@ -2,7 +2,7 @@
 import { db } from "./src/db/index";
 import { documents, documentChunks, workspaces } from "./src/db/schema";
 import { eq, sql } from "drizzle-orm";
-import { pipeline } from "@huggingface/transformers";
+import { pipeline } from "@xenova/transformers";
 import * as dotenv from "dotenv";
 
 dotenv.config({ path: ".env.local" });

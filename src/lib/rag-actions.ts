@@ -53,23 +53,13 @@ import { parsePdfBuffer } from "./pdf-utils";
 
 async function getPipeline() {
     if (!embeddingPipeline) {
-        const { pipeline, env } = await import("@huggingface/transformers");
+        const { pipeline } = await import("@xenova/transformers");
         
-        // Critical for Vercel/Serverless - FORCE WASM
-        env.allowLocalModels = false;
-        env.useBrowserCache = false;
-        if (env.backends?.onnx?.wasm) {
-            env.backends.onnx.wasm.numThreads = 1; 
-        } 
-
-        if (process.env.VERCEL) {
-             env.cacheDir = '/tmp';
-        }
-
+        // Settings for Vercel/Serverless
+        // @xenova/transformers works well with defaults, but we can ensure it uses the correct quantized model
+        
         // Use a model that has 384 dimensions to match DB schema
-        embeddingPipeline = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2', {
-            dtype: 'fp32', // fp32 is safer for WASM
-        });
+        embeddingPipeline = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
     }
 
     return embeddingPipeline;
