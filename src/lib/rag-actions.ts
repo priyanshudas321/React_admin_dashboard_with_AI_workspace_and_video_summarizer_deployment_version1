@@ -109,7 +109,7 @@ export async function uploadDocument(formData: FormData) {
             return { error: "The document appears to be empty or a scanned image (OCR not supported). Please upload a text-searchable PDF." };
         }
 
-        // 1. Create document record
+        // 1. Create document record (Keep this for UI listing if needed, even if loose coupling)
         const [doc] = await db.insert(documents).values({
             userId: session.userId,
             workspaceId: workspaceId,
@@ -135,17 +135,24 @@ export async function uploadDocument(formData: FormData) {
 
                 if (embedding) {
                     chunkValues.push({
-                        documentId: doc.id,
+                        // New Schema: id, document_name, content, embedding, metadata, user_id
+                        documentName: file.name,
                         content: chunk,
-                        chunkIndex: i,
-                        embedding: embedding,
+                        embedding: embedding as any,
+                        userId: session.userId,
+                        metadata: {
+                            documentId: doc.id,
+                            workspaceId: workspaceId,
+                            chunkIndex: i,
+                            type: file.type.includes("pdf") ? "pdf" : "text"
+                        }
                     });
                 }
             } catch (e) {
                 console.warn(`Failed to generate embedding for chunk ${i}:`, e);
             }
 
-            // Rate limiting check not strictly needed for gemini but good practice
+            // Rate limiting check
             if (i % 5 === 0) await new Promise(resolve => setTimeout(resolve, 200));
         }
         
@@ -155,14 +162,7 @@ export async function uploadDocument(formData: FormData) {
             // Batch insert
             const BATCH_SIZE = 50;
             for (let i = 0; i < chunkValues.length; i += BATCH_SIZE) {
-                // Ensure embedding is formatted as a string for pgvector/Neon if native array fails
-                const batch = chunkValues.slice(i, i + BATCH_SIZE).map(chunk => ({
-                    ...chunk,
-                    // Cast to any to bypass TS check if Drizzle expects number[]
-                    embedding: chunk.embedding as any
-                }));
-                
-                await db.insert(documentChunks).values(batch);
+                await db.insert(documentChunks).values(chunkValues.slice(i, i + BATCH_SIZE));
                 console.log(`Inserted batch of ${Math.min(BATCH_SIZE, chunkValues.length - i)} chunks.`);
             }
         } else {
@@ -199,12 +199,14 @@ export async function queryWorkspace(workspaceId: number, question: string) {
 
             relevantChunks = await db.select({
                 content: documentChunks.content,
-                documentName: documents.name,
+                documentName: documentChunks.documentName, // Already correct in previous step? Checking schema
                 similarity: similarity,
             })
                 .from(documentChunks)
-                .innerJoin(documents, eq(documentChunks.documentId, documents.id))
-                .where(drizzleSql`${documents.workspaceId} = ${workspaceId} AND ${similarity} > 0.01`) // Lowered threshold for better recall
+                // Remove join with documents, query chunks directly
+                // Filter by workspaceId stored in metadata
+                // Fix syntax: (metadata->>'workspaceId')::int
+                .where(drizzleSql`(metadata->>'workspaceId')::int = ${workspaceId} AND ${similarity} > 0.01`) 
                 .orderBy(desc(similarity))
                 .limit(8);
             

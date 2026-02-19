@@ -3,7 +3,7 @@
 import { db } from "@/db";
 import { documents, documentChunks, workspaces } from "@/db/schema";
 import { getSession } from "@/lib/auth";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 export async function createWorkspace(name: string) {
@@ -73,11 +73,10 @@ export async function deleteDocument(documentId: number) {
         if (!doc) return { error: "Document not found" };
         if (doc.userId !== session.userId) return { error: "Unauthorized" };
 
-        // Delete document (chunks will cascade if FK set, otherwise manual?)
-        // Schema says: documentId: integer('document_id').references(() => documents.id, { onDelete: 'cascade' }).notNull(),
-        // So chunks will be deleted automatically by Postgres if constraints enforced.
-        // Assuming constraints are enforced. If not, manual delete:
-        await db.delete(documentChunks).where(eq(documentChunks.documentId, documentId));
+        // Delete chunks based on metadata documentId
+        // Correct JSONB path syntax: metadata ->> 'documentId'
+        // Using sql template tag to ensure raw SQL is valid
+        await db.execute(sql`DELETE FROM document_chunks WHERE (metadata->>'documentId')::int = ${documentId}`);
         
         await db.delete(documents).where(eq(documents.id, documentId));
         
@@ -99,12 +98,11 @@ export async function deleteWorkspace(workspaceId: number) {
         if (!ws) return { error: "Workspace not found" };
         if (ws.userId !== session.userId) return { error: "Unauthorized" };
 
-        // Get all documents to delete chunks first (if not cascading)
         const docs = await db.select().from(documents).where(eq(documents.workspaceId, workspaceId));
         
         for (const doc of docs) {
-            // Check if we need to manually delete chunks? Yes, to be safe.
-            await db.delete(documentChunks).where(eq(documentChunks.documentId, doc.id));
+            // Delete chunks based on metadata documentId
+            await db.execute(sql`DELETE FROM document_chunks WHERE (metadata->>'documentId')::int = ${doc.id}`);
         }
 
         // Delete documents

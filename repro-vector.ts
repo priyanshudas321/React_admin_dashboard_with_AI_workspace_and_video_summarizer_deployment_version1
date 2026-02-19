@@ -30,15 +30,16 @@ async function testInsertion() {
         }).returning();
         console.log("Created document:", doc.id);
 
-        // 2. Try inserting chunk WITH stringify
+        // 3. Try inserting chunk WITH stringify
         try {
             console.log("Attempt 1: Stringified Vector");
-            const vector = Array(768).fill(0.1);
+            const vector = Array(384).fill(0.1);
             await db.insert(documentChunks).values({
-                documentId: doc.id,
+                documentName: doc.name,
                 content: "chunk1",
-                chunkIndex: 0,
-                embedding: JSON.stringify(vector) as any, // Cast handled by Drizzle if schema is vector?
+                embedding: JSON.stringify(vector) as any, 
+                userId,
+                metadata: { documentId: doc.id, chunkIndex: 0 },
             });
             console.log("Success: Stringified Vector");
         } catch (e) {
@@ -48,12 +49,13 @@ async function testInsertion() {
         // 3. Try inserting chunk WITHOUT stringify (Array)
         try {
             console.log("Attempt 2: Raw Array Vector");
-            const vector = Array(768).fill(0.2);
+            const vector = Array(384).fill(0.2);
             await db.insert(documentChunks).values({
-                documentId: doc.id,
+                documentName: doc.name,
                 content: "chunk2",
-                chunkIndex: 1,
                 embedding: vector as any,
+                userId,
+                metadata: { documentId: doc.id, chunkIndex: 1 },
             });
             console.log("Success: Raw Array Vector");
         } catch (e) {

@@ -31,11 +31,11 @@ export const documents = pgTable('documents', {
 
 export const documentChunks = pgTable('document_chunks', {
     id: serial('id').primaryKey(),
-    documentId: integer('document_id').references(() => documents.id, { onDelete: 'cascade' }).notNull(),
+    documentName: text('document_name').notNull(),
     content: text('content').notNull(),
-    chunkIndex: integer('chunk_index').notNull(),
     embedding: vector('embedding', { dimensions: 384 }), // For all-MiniLM-L6-v2
-    createdAt: timestamp('created_at').defaultNow().notNull(),
+    metadata: jsonb('metadata'),
+    userId: integer('user_id').references(() => users.id).notNull(), 
 });
 
 export type User = typeof users.$inferSelect;

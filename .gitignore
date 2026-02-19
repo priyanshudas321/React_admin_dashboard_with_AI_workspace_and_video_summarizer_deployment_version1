@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# debug logs
+*.log
+
+# temp schema debugging
+schema.json
+schema-log.txt

@@ -26,14 +26,17 @@ async function debugRag() {
                 console.log(`    Doc: ${doc.name} (ID: ${doc.id})`);
 
                 // 3. Check Chunks
-                const chunks = await db.select().from(documentChunks).where(eq(documentChunks.documentId, doc.id));
+                // Use raw SQL for JSONB check
+                const result = await db.execute(sql`SELECT * FROM document_chunks WHERE (metadata->>'documentId')::int = ${doc.id}`);
+                // Drizzle execute result is driver dependent, often has rows property or is array
+                const chunks = result.rows ? result.rows : result as unknown as any[]; 
+                
                 console.log(`      Chunks: ${chunks.length}`);
 
                 if (chunks.length > 0) {
-                    const firstChunk = chunks[0];
-                    // Check embedding dimension if possible, or just length if it comes back as array
-                    // Drizzle might return it as string or array depending on driver
-                    const embedding = firstChunk.embedding as any; // Cast to any to avoid TS issues with driver return type
+                    const firstChunk = chunks[0] as any;
+                    // Check embedding dimension
+                    const embedding = firstChunk.embedding;
                     
                     if (Array.isArray(embedding)) {
                         console.log(`      First Chunk Embedding Dim: ${embedding.length}`);

@@ -1,0 +1,26 @@
+[
+  {
+    "column_name": "id",
+    "data_type": "integer"
+  },
+  {
+    "column_name": "document_id",
+    "data_type": "integer"
+  },
+  {
+    "column_name": "content",
+    "data_type": "text"
+  },
+  {
+    "column_name": "chunk_index",
+    "data_type": "integer"
+  },
+  {
+    "column_name": "embedding",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "column_name": "created_at",
+    "data_type": "timestamp without time zone"
+  }
+]
